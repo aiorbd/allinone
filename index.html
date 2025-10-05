@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ALL IN ONE REBORN BD</title>
+
+  <!-- Styles -->
+  <script src="styles.js"></script>
+
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+  <!-- Shaka Player with UI -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.ui.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">ALL IN ONE REBORN BD</div>
+    <button class="menu-btn" id="menuBtn">
+      <i class="fas fa-ellipsis-h"></i>
+    </button>
+    <nav class="dropdown-menu" id="dropdownMenu">
+      <a href="https://t.me/allonebd"><i class="fas fa-bolt"></i> Join TG</a>
+    </nav>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" data-filter="all">
+      All <span class="count">(0)</span>
+    </button>
+    <button class="tab-btn" data-filter="live">
+      Live <span class="count">(0)</span>
+    </button>
+    <button class="tab-btn" data-filter="recent">
+      Recent <span class="count">(0)</span>
+    </button>
+    <button class="tab-btn" data-filter="upcoming">
+      Upcoming <span class="count">(0)</span>
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container">
+    <!-- Player Section -->
+    <section class="featured-match" id="videoSection" style="display:none;">
+      <div class="featured-title" id="videoTitle">Featured Match</div>
+      <div class="player-wrapper">
+        <div class="player-container" id="player-wrapper">
+          <!-- Video container for Shaka overlay -->
+          <div id="video-container">
+            <video id="video" class="shaka-video" playsinline></video>
+          </div>
+
+          <!-- Spinner -->
+          <div class="loading-spinner hidden" id="playerSpinner"></div>
+
+          <!-- Server buttons -->
+          <div class="server-options" id="serverRow"></div>
+
+          <!-- Error overlay -->
+          <div class="error-overlay hidden" id="playerError">
+            <p>Stream failed to load.</p>
+            <button id="retryBtn">Retry</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Matches Section -->
+    <section class="matches-section" id="matches-section">
+      <!-- Match cards injected by app.js -->
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="credit">
+      Powered by allinone
+      <a href="https://t.me/allonebd">All In One</a>
+    </div>
+    <div class="version">v1.2.5 </div>
+    <div class="copyright">
+      © 2025 ALL IN ONE REBORN. All Rights Reserved.
+    </div>
+  </footer>
+
+  <!-- App Logic -->
+  <script type="module" src="app.js"></script>
+
+  <!-- Dropdown Toggle -->
+  <script>
+    const menuBtn = document.getElementById('menuBtn');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    if (menuBtn && dropdownMenu) {
+      menuBtn.addEventListener('click', () => {
+        dropdownMenu.style.display =
+          dropdownMenu.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', (e) => {
+        if (!dropdownMenu.contains(e.target) && e.target !== menuBtn) {
+          dropdownMenu.style.display = 'none';
+        }
+      });
+    }
+
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
