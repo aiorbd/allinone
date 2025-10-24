@@ -19,20 +19,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.9/shaka-player.compiled.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.ui.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css">
-  <style>
-    /* Minimal overrides to ensure UI receives pointer events and sits above video */
-    #video-container { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; aspect-ratio: 16/9; min-height: 220px; }
-    video#video { width: 100%; height: 100%; display:block; object-fit:contain; background:#000; }
-    /* dedicated UI container (Shaka mounts controls here) */
-    #shaka-ui { position: absolute; inset: 0; z-index: 10; pointer-events: auto; }
-    /* ensure internal controls accept pointer events */
-    #shaka-ui .shaka-controls { pointer-events: auto; }
-    /* server buttons must sit above player controls */
-    .server-options-wrapper { position: relative; z-index: 20; }
-    /* inline error inside player container (not a full-screen overlay) */
-    #playerError { display:none; margin-top:10px; padding:10px; border-radius:8px; background:#3b1414; color:#ffdede; border:1px solid rgba(200,80,80,0.12); }
-    #playerError.show { display:block; }
-  </style>
+  
 </head>
 <body>
   <!-- Header -->
@@ -136,27 +123,7 @@
       });
     }
 
-    // Quick sanity checks to help debug Shaka UI issues early
-    window.addEventListener('DOMContentLoaded', () => {
-      // ensure Shaka library exists
-      if (!window.shaka) {
-        console.warn("Shaka Player library not found. Controls will not initialize.");
-      }
-      // ensure UI container exists inside video-container
-      const videoContainer = document.getElementById('video-container');
-      const shakaUI = document.getElementById('shaka-ui');
-      if (!videoContainer) console.warn("#video-container missing");
-      if (!shakaUI) {
-        console.warn("#shaka-ui missing — creating one inside #video-container");
-        if (videoContainer) {
-          const div = document.createElement('div');
-          div.id = 'shaka-ui';
-          videoContainer.appendChild(div);
-        }
-      } else if (!videoContainer.contains(shakaUI) && videoContainer) {
-        videoContainer.appendChild(shakaUI);
-      }
-    });
+    
   </script>
 </body>
   </html>
