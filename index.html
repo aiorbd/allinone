@@ -3,123 +3,158 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ALL IN ONE REBORN 🇧🇩</title>
+  <title>ALL IN ONE REBORN BD</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <!-- Styles -->
-  <script src="styles.js"></script>
+  <link rel="stylesheet" href="styles.css" />
 
   <!-- FontAwesome for icons -->
-  <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-  <!-- Shaka Player with UI -->
+  <!-- Shaka Player + UI (UI bundle + CSS) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.ui.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css">
+  <style>
+    /* Minimal overrides to ensure UI receives pointer events and sits above video */
+    #video-container { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; aspect-ratio: 16/9; min-height: 220px; }
+    video#video { width: 100%; height: 100%; display:block; object-fit:contain; background:#000; }
+    /* dedicated UI container (Shaka mounts controls here) */
+    #shaka-ui { position: absolute; inset: 0; z-index: 10; pointer-events: auto; }
+    /* ensure internal controls accept pointer events */
+    #shaka-ui .shaka-controls { pointer-events: auto; }
+    /* server buttons must sit above player controls */
+    .server-options-wrapper { position: relative; z-index: 20; }
+    /* inline error inside player container (not a full-screen overlay) */
+    #playerError { display:none; margin-top:10px; padding:10px; border-radius:8px; background:#3b1414; color:#ffdede; border:1px solid rgba(200,80,80,0.12); }
+    #playerError.show { display:block; }
+  </style>
 </head>
 <body>
-<!-- <script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="346903"></script>
-  <script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="379759"></script>
   <!-- Header -->
   <header class="header">
     <div class="logo">ALL IN ONE REBORN BD</div>
-    <button class="menu-btn" id="menuBtn">
-      <i class="fas fa-ellipsis-h"></i>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="dropdownMenu">
+      <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
     </button>
-    <nav class="dropdown-menu" id="dropdownMenu">
-      <a href="https://t.me/allonebd"><i class="fas fa-bolt"></i> Join TG</a>
+    <nav class="dropdown-menu" id="dropdownMenu" aria-hidden="true">
+      <a href="https://t.me/allonebd" target="_blank" rel="noopener"><i class="fas fa-bolt" aria-hidden="true"></i> Join TG</a>
     </nav>
   </header>
 
   <!-- Tabs -->
-  <nav class="nav-tabs">
-    <button class="tab-btn active" data-filter="all">
-      All <span class="count">(0)</span>
-    </button>
-    <button class="tab-btn" data-filter="live">
-      Live <span class="count">(0)</span>
-    </button>
-    <button class="tab-btn" data-filter="recent">
-      Recent <span class="count">(0)</span>
-    </button>
-    <button class="tab-btn" data-filter="upcoming">
-      Upcoming <span class="count">(0)</span>
-    </button>
-  </nav>
+  <div class="tabs">
+  <button class="tab-btn active" data-filter="all">All</button>
+  <button class="tab-btn" data-filter="live">Live</button>
+  <button class="tab-btn" data-filter="upcoming">Upcoming</button>
+  <button class="tab-btn" data-filter="recent">Recent</button>
+</div>
 
   <!-- Main Content -->
   <main class="container">
+
     <!-- Player Section -->
     <section class="featured-match" id="videoSection" style="display:none;">
       <div class="featured-title" id="videoTitle">Featured Match</div>
-      <div class="player-wrapper">
-        <div class="player-container" id="player-wrapper">
-          <!-- Video container for Shaka overlay -->
-          <div id="video-container">
-            <video id="video" class="shaka-video" playsinline></video>
-          </div>
 
-          <!-- Spinner -->
-          <div class="loading-spinner hidden" id="playerSpinner"></div>
+      <div class="player-container" id="player-wrapper" style="display:flex; flex-direction:column; gap:8px;">
 
-          <!-- Server buttons -->
-          <div class="server-options" id="serverRow"></div>
-
-          <!-- Error overlay -->
-          <div class="error-overlay hidden" id="playerError">
-            <p>Stream failed to load.</p>
-            <button id="retryBtn">Retry</button>
-          </div>
+        <!-- Video container: video + dedicated Shaka UI container -->
+        <div id="video-container">
+          <video id="video" class="shaka-video" playsinline controls></video>
+          <!-- Shaka UI mounts here; must exist in DOM and be inside video-container -->
+          <div id="shaka-ui" aria-hidden="false"></div>
         </div>
+
+        <!-- Spinner (optional) -->
+        <div class="loading-spinner hidden" id="playerSpinner" aria-hidden="true">
+          <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+        </div>
+
+        <!-- Inline player error (not a full-screen overlay) -->
+        <div id="playerError" role="alert" aria-live="assertive">
+          <span id="playerErrorText">Stream failed to load.</span>
+          <button id="retryBtn" style="margin-left:12px;">Retry</button>
+        </div>
+
+        <!-- Server buttons wrapper (kept outside the video-overlay) -->
+        <div class="server-options-wrapper" style="overflow-x:auto;">
+          <div id="serverRow" class="server-options" style="display:flex; gap:8px; min-width:max-content;"></div>
+        </div>
+
       </div>
     </section>
 
     <!-- Matches Section -->
     <section class="matches-section" id="matches-section">
-      <!-- Match cards injected by app.js -->
+      <!-- Match cards injected dynamically -->
     </section>
+
   </main>
 
   <!-- Footer -->
   <footer class="footer">
-    <div class="credit">
-      Powered by 
-      <a href="https://t.me/allonebd">all_in_one_reborn </a>
-    </div>
-    <div class="version">v1.3.3 </div>
-    <div class="copyright">
-      © 2025 ALL IN ONE REBORN.🇧🇩
-    </div>
+    © 2025 ALL IN ONE REBORN. All Rights Reserved.<br>Version 3.0 
   </footer>
 
-  <!-- App Logic -->
+  <!-- App JS -->
   <script type="module" src="app.js"></script>
 
-  <!-- Dropdown Toggle -->
+  <!-- Dropdown toggle + small accessibility fixes -->
   <script>
-    const menuBtn = document.getElementById('menuBtn');
-    const dropdownMenu = document.getElementById('dropdownMenu');
-    if (menuBtn && dropdownMenu) {
-      menuBtn.addEventListener('click', () => {
-        dropdownMenu.style.display =
-          dropdownMenu.style.display === 'block' ? 'none' : 'block';
-      });
-      document.addEventListener('click', (e) => {
-        if (!dropdownMenu.contains(e.target) && e.target !== menuBtn) {
-          dropdownMenu.style.display = 'none';
-        }
+    (function(){
+      const menuBtn = document.getElementById('menuBtn');
+      const dropdownMenu = document.getElementById('dropdownMenu');
+
+      if (menuBtn && dropdownMenu) {
+        menuBtn.addEventListener('click', (e) => {
+          const isOpen = dropdownMenu.style.display === 'block';
+          dropdownMenu.style.display = isOpen ? 'none' : 'block';
+          menuBtn.setAttribute('aria-expanded', String(!isOpen));
+          dropdownMenu.setAttribute('aria-hidden', String(isOpen));
+        });
+
+        document.addEventListener('click', e => {
+          if (!dropdownMenu.contains(e.target) && e.target !== menuBtn) {
+            dropdownMenu.style.display = 'none';
+            menuBtn.setAttribute('aria-expanded', 'false');
+            dropdownMenu.setAttribute('aria-hidden', 'true');
+          }
+        });
+      }
+    })();
+
+    // Service Worker registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .catch(err => console.warn("SW registration failed:", err));
       });
     }
 
-    // Service Worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
-      });
-    }
+    // Quick sanity checks to help debug Shaka UI issues early
+    window.addEventListener('DOMContentLoaded', () => {
+      // ensure Shaka library exists
+      if (!window.shaka) {
+        console.warn("Shaka Player library not found. Controls will not initialize.");
+      }
+      // ensure UI container exists inside video-container
+      const videoContainer = document.getElementById('video-container');
+      const shakaUI = document.getElementById('shaka-ui');
+      if (!videoContainer) console.warn("#video-container missing");
+      if (!shakaUI) {
+        console.warn("#shaka-ui missing — creating one inside #video-container");
+        if (videoContainer) {
+          const div = document.createElement('div');
+          div.id = 'shaka-ui';
+          videoContainer.appendChild(div);
+        }
+      } else if (!videoContainer.contains(shakaUI) && videoContainer) {
+        videoContainer.appendChild(shakaUI);
+      }
+    });
   </script>
-  <script>
-  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
